@@ -1,7 +1,9 @@
 import urllib.parse
 
-import simplejson as json
-from selenium import webdriver
+try:
+    import simplejson as json
+except:
+    import json
 
 
 def get_local_ip_by_quick_connect_id(q_id):
@@ -11,6 +13,7 @@ def get_local_ip_by_quick_connect_id(q_id):
     :param q_id: QuickConnect ID
     :return:
     """
+    from selenium import webdriver
     url = f"https://{q_id}.quickconnect.to/"
     driver = webdriver.Chrome()
     driver.implicitly_wait(20)

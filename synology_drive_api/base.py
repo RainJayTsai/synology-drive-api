@@ -4,7 +4,10 @@ from typing import Optional, Union
 from urllib.parse import urlparse
 
 import requests
-import simplejson as json
+try:
+    import simplejson as json
+except:
+    import json
 import urllib3
 
 # Used for verify=False in requests
@@ -139,12 +142,14 @@ class SynologySession:
                  ip_address: Optional[str] = None,
                  port: Optional[int] = None,
                  nas_domain: Optional[str] = None,
-                 https: Optional[bool] = True) -> None:
+                 https: Optional[bool] = True,
+                 dsm_version: int = 2) -> None:
         nas_address = concat_nas_address(ip_address, port, nas_domain, https)
         self._username = username
         self._password = password
         self._base_url = f"{nas_address}/webapi/"
         self.req_session.cookies.set_policy(BlockAll())
+        self._version = str(dsm_version)
 
     def _request(self, method: str, endpoint: str, **kwargs):
         """
@@ -203,8 +208,10 @@ class SynologySession:
 
     def login(self, application: str):
         endpoint = 'auth.cgi'
-        params = {'api': 'SYNO.API.Auth', 'version': '2', 'method': 'login', 'account': self._username,
-                  'passwd': self._password, 'session': application, 'format': 'cookie'}
+        params = {'api': 'SYNO.API.Auth', 'version': self._version,
+                  'method': 'login', 'account': self._username,
+                  'passwd': self._password,
+                  'session': application, 'format': 'cookie'}
         if not self._session_expire:
             if self._sid is not None:
                 self._session_expire = False
@@ -220,7 +227,8 @@ class SynologySession:
 
     def logout(self, application: str):
         endpoint = 'auth.cgi'
-        params = {'api': 'SYNO.API.Auth', 'version': '2', 'method': 'logout', 'session': application}
+        params = {'api': 'SYNO.API.Auth', 'version': self._version,
+                  'method': 'logout', 'session': application}
         resp = self.http_get(
             endpoint,
             params=params
